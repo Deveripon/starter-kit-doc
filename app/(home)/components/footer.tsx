@@ -36,7 +36,8 @@ const Footer = () => {
                     </Link>
                 </div>
                 <p className='text-[10px] text-fd-muted-foreground/60 font-bold uppercase tracking-widest'>
-                    © {new Date().getFullYear()} ALL RIGHTS RESERVED.
+                    ©<Link href='https://devripon.vercel.app'>devripon</Link>{' '}
+                    {new Date().getFullYear()} ALL RIGHTS RESERVED.
                 </p>
             </div>
         </footer>
@@ -44,3 +45,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

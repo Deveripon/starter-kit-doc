@@ -2,9 +2,9 @@
   "pages": [
     "index",
     "---Getting Started---",
-    "essentials",
-    "features",
-    "---Development---",
-    "test"
+    "installation",
+    "authentication",
+    "database",
+    "---Development---"
   ]
 }

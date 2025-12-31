@@ -1,0 +1,9 @@
+{
+    "title": "Authentication",
+    "description": "Secure your application with BetterAuth.",
+    "icon": "ShieldCheck",
+    "pages": [
+        "better-auth",
+        "auth-js"
+    ]
+}

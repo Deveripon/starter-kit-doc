@@ -1,22 +1,61 @@
 ---
 title: Introduction
-description: Welcome to the NextNest documentation.
+description: The ultimate Full-Stack Monorepo Starter Kit with Next.js, Nest.js, and multi-auth support.
 icon: Album
 ---
 
-Welcome to the NextNest documentation. This is where you can find all the information you need to get started with our premium starter kit.
+# Welcome to Full Stack Monorepo Starter Kit 🚀
 
-## What is NextNest?
+Building full-stack applications often involves setting up the same repetitive boilerplate: authentication, database connections, folder structures, and proxy configurations. This project was born out of a simple idea: **to make project bootstrapping instant and painless.**
 
-NextNest is a premium Next.js & NestJS starter kit designed for speed, security, and developer joy.
+This is a high-performance, type-safe starter kit built with a **Monorepo architecture**. It bridges the gap between **Next.js** (Frontend) and **Nest.js** (Backend) using a unified authentication layer.
+
+## Why this Starter Kit?
+
+Most starter kits focus on a single framework. This kit focuses on an **ecosystem**. It allows you to maintain a clean, decoupled backend with Nest.js while enjoying the cutting-edge frontend features of Next.js 15.
 
 ### Key Features
+- **Monorepo Ready:** Scalable structure for large teams and projects.
+- **Multiple Auth Flavors:** Choose between **Better Auth** (Recommended) or **Auth.js** based on your project needs.
+- **AI-Enhanced UI:** Clean and responsive UI components generated and refined with **Gemini 3 Flash**.
+- **Developer Experience:** Pre-configured proxies, detailed logging, and a dedicated CLI.
 
-- **End-to-end Type Safety**: Shared types between frontend and backend.
-- **Modern Auth**: Pre-configured BetterAuth integration.
-- **Database Ready**: Prisma ORM with optimized configurations.
-- **Premium UI**: Styled with Tailwind CSS 4 and Fumadocs.
+---
 
-## Getting Started
+## Authentication Flavors
 
-To get started, follow our installation guide in the next section.
+Every project has different needs. This kit provides two primary ways to handle authentication:
+
+### 1. Better Auth (The Powerhouse)
+Our primary version uses **Better Auth**. It features a shared database session strategy that works seamlessly across your Next.js frontend and Nest.js backend. 
+- **Pros:** Robust session management, easy OAuth, and superior support for hybrid APIs (Browser & Postman).
+
+### 2. Auth.js (The Classic)
+For those who prefer the tried-and-tested ecosystem of NextAuth, we maintain a dedicated version using **Auth.js**.
+- **Pros:** Massive community support and extensive social login providers.
+
+---
+
+## The CLI Tool 🛠️
+
+To make things even easier, I've built a **custom CLI tool** that handles the heavy lifting for you. No more manual cloning or variable editing. 
+
+With a single command, you can:
+- Bootstrap a new project.
+- Choose your preferred Auth provider (Better Auth or Auth.js).
+- Configure environment variables automatically.
+
+> We will cover the CLI usage and manual setup in the [Installation](/docs/installation) section.
+
+---
+
+## Getting Involved
+
+This project is open-source and constantly evolving. If you find it helpful, please consider supporting the project:
+
+- **GitHub (Better Auth):** [Deveripon/Next-Nest-Better-Auth](https://github.com/Deveripon/Next-Nest-Better-Auth)
+- **GitHub (Auth.js):** [Deveripon/Next-Nest-Auth.js](https://github.com/Deveripon/next-nest-auth-js-starterkit)
+- **Star the Repo:** If this saves you dev-hours, a ⭐ is highly appreciated!
+- **Contribute:** Found a bug or have a feature request? Open an issue!
+
+Ready to build? Let's head over to the **[Installation](/docs/installation)** guide.

@@ -31,7 +31,7 @@ const Navigation = () => {
                     </Link>
                 </div>
 
-                <div className='flex items-center gap-4'>
+                {/*         <div className='flex items-center gap-4'>
                     <Link
                         href='/login'
                         className='hidden md:flex text-fd-muted-foreground hover:text-fd-foreground'>
@@ -42,7 +42,7 @@ const Navigation = () => {
                         className='rounded-full flex justify-center items-center h-9 px-5 text-[12px] font-bold tracking-wide text-brand-foreground bg-brand hover:opacity-90 transition-all border-none'>
                         GET STARTED
                     </Link>
-                </div>
+                </div> */}
             </div>
         </nav>
     );

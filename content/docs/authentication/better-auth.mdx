@@ -1,0 +1,189 @@
+---
+title: Better-Auth Strategy
+description: Learn how to implement the Shared Database Session strategy using Better-Auth.
+---
+
+# Better-Auth (Shared Session)
+
+The Better-Auth version utilizes a **Shared Database Session** architecture. In this setup, both the Next.js frontend and the NestJS backend communicate with the same database to validate sessions via the Better-Auth API.
+
+## Backend Implementation (NestJS)
+
+The backend relies on a custom `AuthGuard` that extracts the session token from either cookies or headers and validates it against the database.
+
+### 1. The AuthGuard Logic
+Your `src/auth/guards/auth.guard.ts` contains hybrid logic to support both browser requests (Cookies) and external API tools like Postman (Bearer Tokens).
+
+```typescript
+@Injectable()
+export class AuthGuard implements CanActivate {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const headers = fromNodeHeaders(request.headers);
+
+    // 1. Try to get token from Cookies (Browser)
+    const cookieToken = request.cookies?.['better-auth.session_token'];
+    
+    // 2. Fallback to Authorization Header (Postman/Bearer)
+    const authHeader = request.headers['authorization'];
+    if (!cookieToken && authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      headers.set('cookie', `better-auth.session_token=${token}`);
+    }
+
+    // 3. Validate with Better-Auth API
+    const session = await this.authService.auth.api.getSession({ headers });
+
+    if (!session) throw new UnauthorizedException('Invalid session');
+
+    // 4. Attach user to request object
+    request['user'] = session.user;
+    return true;
+  }
+}
+```
+### 2. Protecting Routes
+Apply the guard to your controllers or specific endpoints using the @UseGuards decorator.
+
+```typescript
+@Get('all-users')
+@UseGuards(AuthGuard) 
+async getAllUsers() {
+  return this.userService.findAll();
+}
+```
+
+### Implementation Patterns of Guards
+
+
+1. AuthGuard 
+     - Use for: Standard protected routes
+     - Example: User profile, protected resources
+
+2. PermissionsGuard
+     - Use for: Fine-grained access control based on permissions
+     - Example: Content management, specific actions
+     - Always use AFTER authentication guard
+
+3. RolesGuard
+     - Use for: Broad access control based on user roles
+     - Example: Admin panel, manager dashboard
+     - Always use AFTER authentication guard
+ 
+
+
+```typescript
+// Just authentication 
+ @UseGuards(AuthGuard)
+
+
+ 
+// Authentication + Role check
+@Roles(Role.SUPER_ADMIN)
+@UseGuards(AuthGuard, RolesGuard)
+
+// Multiple roles (user can have ANY of these roles)
+@RequireRoles(Role.ADMIN, Role.MANAGER)
+
+// Authentication + Permission check
+@UseGuards(AuthGuard, PermissionsGuard)
+@RequirePermissions(Permission.CREATE_CONTENT)
+
+// Authentication + Role + Permission
+@UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+@Roles(Role.ADMIN)
+@RequirePermissions(Permission.MANAGE_SYSTEM)
+```
+
+
+### COMBINING GUARDS - Common Patterns
+
+
+```typescript
+@Controller('advanced')
+export class AdvancedController {
+  // Pattern 1: Authentication + Role
+  @Get('admin-only')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  adminOnly() {
+    // Must be authenticated AND have ADMIN role
+    return { message: 'Admin only content' };
+  }
+
+  // Pattern 2: Authentication + Permission
+  @Post('create-content')
+  @UseGuards(AuthGuard, PermissionsGuard)
+  @RequirePermissions(Permission.CREATE_CONTENT)
+  createContent() {
+    // Must be authenticated AND have CREATE_CONTENT permission
+    return { message: 'Content created' };
+  }
+
+  // Pattern 3: Authentication + Role + Permission
+  @Delete('system/:id')
+  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(Role.SUPER_ADMIN)
+  @RequirePermissions(Permission.MANAGE_SYSTEM)
+  deleteSystem() {
+    // Must be authenticated AND be SUPER_ADMIN AND have MANAGE_SYSTEM permission
+    return { message: 'System deleted' };
+  }
+} 
+```
+
+### PERMISSIONS GUARD
+
+```typescript
+// Use to check if authenticated user has specific permissions
+// Must be used AFTER authentication guard (JWT)
+
+
+@Controller('content')
+@UseGuards(AuthGuard('jwt'), PermissionsGuard) // First authenticate, then check permissions
+export class ContentController {
+  // Example 1: Single permission
+  @Get()
+  @RequirePermissions(Permission.VIEW_CONTENT)
+  findAll() {
+    // Only users with VIEW_CONTENT permission can access
+    return { message: 'All content' };
+  }
+
+  // Example 2: Multiple permissions (user must have ALL)
+  @Post()
+  @RequirePermissions(Permission.CREATE_CONTENT, Permission.MANAGE_MEDIA)
+  create() {
+    // User must have BOTH CREATE_CONTENT AND MANAGE_MEDIA permissions
+    return { message: 'Content created' };
+  }
+
+  // Example 3: Different permissions for different operations
+  @Delete(':id')
+  @RequirePermissions(Permission.DELETE_CONTENT)
+  delete() {
+    // Only users with DELETE_CONTENT permission
+    return { message: 'Content deleted' };
+  }
+
+  // Example 4: No permission decorator = accessible to all authenticated users
+  @Get('public')
+  getPublicContent() {
+    // Any authenticated user can access (no specific permission needed)
+    return { message: 'Public content' };
+  }
+} 
+```
+
+### Frontend Implementation (Next.js)
+Because this strategy relies on httpOnly cookies, the frontend must explicitly include credentials in every proxied request to ensure the browser attaches the session cookie.
+
+### Fetching with Credentials
+When calling a protected NestJS route from the frontend:
+
+```typescript
+const response = await fetch('/api/v1/user/profile', {
+  method: 'GET',
+  credentials: 'include' // MANDATORY for cookie-based auth
+});
+```

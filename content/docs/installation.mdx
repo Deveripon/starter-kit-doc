@@ -1,0 +1,159 @@
+---
+title: Installation
+description: Learn how to set up the Next-Nest-Auth starter kit using our CLI or manual methods.
+icon: Terminal
+---
+
+# Installation Guide 🛠️
+
+You can get started with the Next-Nest-Auth starter kit in two ways. Whether you prefer a guided terminal experience or full control via manual cloning, we've got you covered.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+- **Node.js:** version 20.x or higher.
+- **Package Manager:** [pnpm](https://pnpm.io/) is highly recommended (and required for the monorepo workspace features).
+- **Database:** A PostgreSQL instance (local or hosted like Neon/Supabase).
+
+---
+
+## Method 1: Interactive CLI (Recommended)
+
+The fastest way to bootstrap your project is using our dedicated CLI tool, `create-next-nest`. It handles template selection and dependency installation automatically.
+
+### 1. Run via pnpm dlx
+You don't even need to install it. Just run:
+
+```bash
+pnpm dlx create-next-nest
+
+```
+[![Screen Shot](https://raw.githubusercontent.com/Deveripon/cli-tool-create-next-nest/refs/heads/main/ss.png)](https://raw.githubusercontent.com/Deveripon/cli-tool-create-next-nest/refs/heads/main/ss.png)
+
+### 2. Follow the Prompts
+
+The CLI will guide you through the setup:
+
+* **Project Name:** Choose a name for your application folder.
+* **Authentication Library:** Select between **Better-Auth (Recommended)** or **Auth.js**.
+* **Auto Install:** Select **Yes** to let the CLI run `pnpm install` for you.
+
+### 3. Global Installation (Optional)
+
+If you build projects frequently, install it globally:
+
+```bash
+pnpm add -g create-next-nest
+# Then just run:
+create-next-nest
+
+```
+
+---
+
+## Method 2: Manual Installation (Git)
+
+If you prefer to manually clone the repository and set things up, follow these steps.
+
+### 1. Clone the Repository
+
+Choose the version you want to use:
+
+**For Better-Auth Version:**
+
+```bash
+git clone https://github.com/Deveripon/Next-Nest-Better-Auth.git my-app
+
+```
+
+**For Auth.js Version:**
+
+```bash
+git clone https://github.com/Deveripon/next-nest-auth-js-starterkit.git my-app
+
+```
+
+### 2. Install Dependencies
+
+Navigate to the project folder and use `pnpm` to install workspace dependencies:
+
+```bash
+cd my-app
+pnpm install
+
+```
+
+---
+
+## Environment Setup ⚙️
+
+Once the files are ready, you need to configure your environment variables.
+
+### 1. Backend Configuration
+
+Navigate to `apps/backend` and create a `.env` file:
+
+```bash
+cd apps/backend
+cp .env.example .env
+
+```
+
+Edit the `.env` file with your credentials:
+
+* `DATABASE_URL`: Your PostgreSQL connection string.
+* `BETTER_AUTH_SECRET`: A random secure string.
+* `BETTER_AUTH_URL`: `http://localhost:3000` (Your frontend URL).
+
+### 2. Frontend Configuration
+
+Navigate to `apps/frontend` and create a `.env` file:
+
+```bash
+cd ../frontend
+cp .env.example .env
+
+```
+
+Update the `BETTER_AUTH_SECRET` to match the backend one.
+
+---
+
+## Database Initialization 🗄️
+
+Since this project uses **Prisma**, you need to sync your schema with your database:
+
+```bash
+# From the root directory
+pnpm db:generate
+pnpm db:push
+
+```
+
+---
+
+## Running the Project 🚀
+
+Now you are ready to start the development servers! We use **Turborepo** to manage both frontend and backend simultaneously.
+
+From the **root directory**, run:
+
+```bash
+pnpm dev
+
+```
+
+This command will start:
+
+* **Frontend:** [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000)
+* **Backend:** [http://localhost:5000](https://www.google.com/search?q=http://localhost:5000)
+* **Documentation:** [http://localhost:3001](https://www.google.com/search?q=http://localhost:3001) (if included)
+
+---
+
+## Troubleshooting
+
+* **CORS Issues:** Ensure your `BETTER_AUTH_URL` in the backend `.env` matches your frontend's actual URL.
+* **Prisma Errors:** Double check that your `DATABASE_URL` is correct and your database server is running.
+* **Pnpm Workspace:** If dependencies fail, try running `pnpm store prune` and then `pnpm install`.
+

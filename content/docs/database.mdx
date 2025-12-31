@@ -1,0 +1,187 @@
+---
+title: Database & Prisma
+description: Manage your data with Prisma ORM.
+icon: Database
+---
+
+
+The Better-Auth version follows a **Stateful Session** strategy. Unlike Auth.js (which often relies on stateless JWTs), Better-Auth stores session data directly in your PostgreSQL database. This allows for features like active session management, "sign out from all devices," and easier security auditing.
+
+## 1. The Core Schema Models
+### 1. The User Model
+This is the heart of your application. It stores the identity of the person interacting with your system.
+
+```prisma
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  sessions      Session[]
+  accounts      Account[]
+
+  @@index([id, email])
+  @@map("user")
+}
+```
+
+Why this structure?
+
+@unique Email: Ensures no two people can register with the same address.
+
+emailVerified: Essential for security. You can block certain features (like payments or settings) until this is true.
+
+@@index: By indexing the id and email, we make the most common database lookups (logging in and fetching profile) nearly instantaneous.
+
+### 2. The Session Model
+This table tracks every time a user logs in from a specific browser or device.
+
+```prisma
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([id])
+  @@map("session")
+}
+```
+Why this structure?
+
+onDelete: Cascade: If a user deletes their account, all their sessions are instantly wiped. No "ghost" sessions left in the DB.
+
+ipAddress & userAgent: This is for Security Auditing. It allows you to show the user a "Security Tab" where they can see exactly where they are logged in (e.g., "Chrome on MacOS in Dhaka").
+
+token: This is the secret value stored in the user's cookie. The server checks this table to see if that token is still valid.
+
+### 3. The Account Model
+This handles "how" the user logged in—whether via Password, Google, GitHub, or another provider.
+
+```prisma
+model Account {
+  id                    String    @id @default(uuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([id])
+  @@map("account")
+}
+```
+Why this structure?
+
+providerId: Distinguishes between google, github, or credentials.
+
+password: Better-Auth stores the hashed password here rather than in the User table. This keeps the User table clean and "OAuth-ready."
+
+Tokens: It stores OAuth tokens so your app can perform actions on behalf of the user (like fetching their GitHub repos).
+
+### 4. The Verification Model
+This is for temporary, one-time security actions.
+
+```prisma
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([id])
+  @@map("verification")
+}
+```
+Why this structure?
+
+value: This holds the hashed token for email verification or password resets.
+
+identifier: Usually the email address. It ensures we know who requested the verification code.
+
+## 2. Prisma Configuration (`prisma.config.ts`)
+
+Starting with Prisma 6.18+ and moving into Prisma 7, configuration is moving from the `.prisma` file to a TypeScript-based config. This allows for more dynamic environment variable handling.
+
+```typescript
+import 'dotenv/config';
+import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+    schema: 'prisma/schema.prisma',
+    migrations: {
+        path: 'prisma/migrations',
+    },
+    datasource: {
+        url: process.env['DATABASE_URL'], // Pulled from your .env
+    },
+});
+
+```
+
+---
+
+## 3. The Database Adapter (`prisma.ts`)
+
+To ensure high performance and prevent database connection exhaustion, we use a singleton pattern for the Prisma Client. This version also includes the **Postgres Adapter** which is optimized for Node.js environments.
+
+```typescript
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+// Initialize the Postgres adapter with your connection string
+const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+});
+
+const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+
+// Prevent multiple instances during Hot Module Reloading (HMR) in development
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+export default prisma;
+
+```
+
+---
+
+## 4. How Better-Auth Interacts with Prisma
+
+When you configure Better-Auth in your `auth.ts` file, you simply pass this prisma instance to the Prisma Adapter:
+
+```typescript
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import prisma from "./lib/prisma"; // Your prisma.ts file
+
+export const auth = betterAuth({
+    database: prismaAdapter(prisma, {
+        provider: "postgresql",
+    }),
+    // ...other config
+});
+
+```
+
+---
