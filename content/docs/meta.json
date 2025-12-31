@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "essentials",
+    "features",
+    "---Development---",
+    "test"
+  ]
+}

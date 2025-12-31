@@ -1,0 +1,10 @@
+{
+  "title": "Features",
+  "description": "Deep dive into NextNest features",
+  "icon": "Package",
+  "pages": [
+    "authentication",
+    "database",
+    "..."
+  ]
+}
